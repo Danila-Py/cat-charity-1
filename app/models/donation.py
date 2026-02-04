@@ -1,0 +1,11 @@
+from sqlalchemy import Text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.db import CommonMixin
+from app.models.base import BaseCharityDonationModel
+
+
+class Donation(CommonMixin, BaseCharityDonationModel):
+    """Модель пожертвований."""
+
+    comment: Mapped[str] = mapped_column(Text, nullable=True)
