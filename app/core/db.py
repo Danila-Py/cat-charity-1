@@ -11,6 +11,7 @@ from sqlalchemy.orm import (
     declared_attr,
     mapped_column,
 )
+
 from typing import AsyncGenerator
 
 from app.core.config import settings
