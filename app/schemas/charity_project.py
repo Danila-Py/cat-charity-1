@@ -1,11 +1,6 @@
 from typing import Optional
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    PositiveInt,
-)
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 from app.schemas.base import BaseDB
 

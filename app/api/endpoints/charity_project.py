@@ -3,21 +3,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.validators import (
-    check_charity_project_before_edit,
-    check_charity_project_exists,
-    check_charity_project_is_not_invested,
-    check_name_duplicate
-)
+from app.api.validators import (check_charity_project_before_edit,
+                                check_charity_project_exists,
+                                check_charity_project_is_not_invested,
+                                check_name_duplicate)
 from app.core.db import get_async_session
 from app.crud import charity_project_crud
-from app.schemas.charity_project import (
-    CharityProjectCreate,
-    CharityProjectDB,
-    CharityProjectUpdate
-)
+from app.schemas.charity_project import (CharityProjectCreate,
+                                         CharityProjectDB,
+                                         CharityProjectUpdate)
 from app.services.investing import invest_to_new_project
-
 
 router = APIRouter()
 

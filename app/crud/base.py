@@ -1,8 +1,8 @@
-from sqlalchemy import select, asc
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
 from typing import List, Optional
+
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import asc, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
 

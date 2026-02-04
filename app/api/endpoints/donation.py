@@ -5,13 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
 from app.crud import donation_crud
-from app.schemas.donation import (
-    DonationCreate,
-    DonationFullInfoDB,
-    DonationDB
-)
+from app.schemas.donation import DonationCreate, DonationDB, DonationFullInfoDB
 from app.services.investing import invest_donation
-
 
 router = APIRouter()
 

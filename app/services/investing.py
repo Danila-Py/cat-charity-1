@@ -2,8 +2,8 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject, Donation
 from app.crud.base import BaseCharityRepository
+from app.models import CharityProject, Donation
 
 
 async def invest_donation(
