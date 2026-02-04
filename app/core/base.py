@@ -1,2 +1,2 @@
-from app.core.db import Base
-from app.models import CharityProject, Donation
+from app.core.db import Base # noqa
+from app.models import CharityProject, Donation # noqa
