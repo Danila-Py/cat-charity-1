@@ -1,6 +1,4 @@
-
 from sqlalchemy import Integer
-
 
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -25,7 +23,7 @@ class Base(DeclarativeBase):
 
 class CommonMixin:
     @declared_attr
-    def __tablename__(cls) -> str:
+    def __tablename__(cls) -> str:  
         return cls.__name__.lower()
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
