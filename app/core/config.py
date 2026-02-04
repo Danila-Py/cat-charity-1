@@ -1,16 +1,14 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.constants import (
-    DEFAULT_APP_TITLE,
-    DEFAULT_DESCRIPTION,
-    DEFAULT_DB_URL
-)
+BASE_DIR = Path(__file__).parent.parent
 
 
 class Settings(BaseSettings):
-    app_title: str = DEFAULT_APP_TITLE
-    description: str = DEFAULT_DESCRIPTION
-    database_url: str = DEFAULT_DB_URL
+    app_title: str = 'Благотворительный фонд поддержки котиков QRKot'
+    description: str = 'Сервис для поддержки котиков'
+    database_url: str = 'sqlite+aiosqlite:///./fastapi.db'
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding='utf-8',

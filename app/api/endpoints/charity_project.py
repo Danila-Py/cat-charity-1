@@ -28,6 +28,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
     '/',
     response_model=CharityProjectDB,
     response_model_exclude_none=True,
+    summary='Создание нового благотворительного проекта',
     description='Создать целевой проект.'
 )
 async def create_new_charityproject(
@@ -45,19 +46,20 @@ async def create_new_charityproject(
     '/',
     response_model=list[CharityProjectDB],
     response_model_exclude_none=True,
+    summary='Получение списка всех благотворительных проектов',
 )
 async def get_all_charityproject(
     session: SessionDep
 ):
     """Получение всех благотворительных проектов."""
-    all_projects = await charity_project_crud.get_multi(session)
-    return all_projects
+    return await charity_project_crud.get_multi(session)
 
 
 @router.patch(
     '/{project_id}',
     response_model=CharityProjectDB,
     response_model_exclude_none=True,
+    summary='Обновление благотворительного проекта',
     description=(
         'Редактировать целевой проект. '
         'Закрытый проект нельзя редактировать; нельзя установить требуемую '
@@ -85,7 +87,8 @@ async def partially_update_charityproject(
 
 @router.delete(
     '/{project_id}',
-    response_model=CharityProjectDB
+    response_model=CharityProjectDB,
+    summary='Удаление благотворительного проекта',
 )
 async def delete_charityproject(
     project_id: int,

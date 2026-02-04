@@ -1,17 +1,28 @@
 from datetime import datetime
 
-from sqlalchemy import select, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
+from app.crud.base import BaseCharityRepository
 
 
 async def invest_donation(
     donation: Donation,
     session: AsyncSession,
 ) -> Donation:
+    """
+    Инвестирует пожертвование в активные проекты.
+
+    Args:
+        donation (Donation): Пожертвование для инвестирования.
+        session (AsyncSession): Сессия базы данных.
+
+    Returns:
+        Donation: Обновленное пожертвование.
+    """
     remaining_amount = donation.full_amount - donation.invested_amount
-    projects = await get_active_projects(session)
+    repository = BaseCharityRepository(session)
+    projects = await repository.get_active_projects()
 
     for project in projects:
         needed_amount = project.full_amount - project.invested_amount
@@ -38,7 +49,15 @@ async def invest_to_new_project(
     project: CharityProject,
     session: AsyncSession,
 ) -> CharityProject:
-    donations = await get_active_donations(session)
+    """
+    Инвестирует в новый проект из активных пожертвований.
+
+    Args:
+        project (CharityProject): Проект для инвестирования.
+        session (AsyncSession): Сессия базы данных.
+    """
+    repository = BaseCharityRepository(session)
+    donations = await repository.get_active_donations()
     if not donations:
         return project
     remaining_needed = project.full_amount - project.invested_amount
@@ -58,28 +77,3 @@ async def invest_to_new_project(
     await session.commit()
     await session.refresh(project)
     return project
-
-
-async def get_active_projects(
-    session: AsyncSession
-):
-    active_projects = await session.execute(
-        select(CharityProject)
-        .where(
-            CharityProject.close_date.is_(None),
-            CharityProject.fully_invested.is_(False),
-        )
-        .order_by(asc(CharityProject.create_date))
-    )
-    return active_projects.scalars().all()
-
-
-async def get_active_donations(
-    session: AsyncSession
-):
-    donations = await session.execute(
-        select(Donation)
-        .where(Donation.fully_invested.is_(False))
-        .order_by(asc(Donation.create_date))
-    )
-    return donations.scalars().all()
