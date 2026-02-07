@@ -1,10 +1,12 @@
-from typing import List, Optional
+from typing import List, Optional, TypeVar, Type
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import asc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
+
+T = TypeVar('T', CharityProject, Donation)
 
 
 class CRUDBase:
@@ -78,21 +80,24 @@ class BaseCharityRepository(CRUDBase):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_active_projects(self) -> List[CharityProject]:
-        active_projects = await self.session.execute(
-            select(CharityProject)
-            .where(
-                CharityProject.close_date.is_(None),
-                CharityProject.fully_invested.is_(False),
+    async def get_active_entities(self, entity_type: Type[T]) -> List[T]:
+        if entity_type == CharityProject:
+            query = (
+                select(CharityProject)
+                .where(
+                    CharityProject.close_date.is_(None),
+                    CharityProject.fully_invested.is_(False),
+                )
+                .order_by(asc(CharityProject.create_date))
             )
-            .order_by(asc(CharityProject.create_date))
-        )
-        return active_projects.scalars().all()
+        elif entity_type == Donation:
+            query = (
+                select(Donation)
+                .where(Donation.fully_invested.is_(False))
+                .order_by(asc(Donation.create_date))
+            )
+        else:
+            raise ValueError('Неподдерживаемый тип объекта')
 
-    async def get_active_donations(self) -> List[Donation]:
-        donations = await self.session.execute(
-            select(Donation)
-            .where(Donation.fully_invested.is_(False))
-            .order_by(asc(Donation.create_date))
-        )
-        return donations.scalars().all()
+        result = await self.session.execute(query)
+        return result.scalars().all()

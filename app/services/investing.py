@@ -10,19 +10,10 @@ async def invest_donation(
     donation: Donation,
     session: AsyncSession,
 ) -> Donation:
-    """
-    Инвестирует пожертвование в активные проекты.
-
-    Args:
-        donation (Donation): Пожертвование для инвестирования.
-        session (AsyncSession): Сессия базы данных.
-
-    Returns:
-        Donation: Обновленное пожертвование.
-    """
+    """Инвестирует пожертвование в активные проекты."""
     remaining_amount = donation.full_amount - donation.invested_amount
     repository = BaseCharityRepository(session)
-    projects = await repository.get_active_projects()
+    projects = await repository.get_active_entities(CharityProject)
 
     for project in projects:
         needed_amount = project.full_amount - project.invested_amount
@@ -49,15 +40,9 @@ async def invest_to_new_project(
     project: CharityProject,
     session: AsyncSession,
 ) -> CharityProject:
-    """
-    Инвестирует в новый проект из активных пожертвований.
-
-    Args:
-        project (CharityProject): Проект для инвестирования.
-        session (AsyncSession): Сессия базы данных.
-    """
+    """Инвестирует в новый проект из активных пожертвований."""
     repository = BaseCharityRepository(session)
-    donations = await repository.get_active_donations()
+    donations = await repository.get_active_entities(Donation)
     if not donations:
         return project
     remaining_needed = project.full_amount - project.invested_amount
