@@ -12,10 +12,20 @@ class BaseCharityDonationModel(Base):
     __abstract__ = True
 
     full_amount: Mapped[int] = mapped_column(
-        Integer, CheckConstraint('full_amount >= 0'), nullable=False
+        Integer, CheckConstraint(
+            'full_amount >= 0',
+            name='check_full_amount_positive'
+        ), nullable=False
     )
     invested_amount: Mapped[int] = mapped_column(
-        Integer, CheckConstraint('invested_amount >= 0'), default=0
+        Integer, CheckConstraint(
+            'invested_amount >= 0',
+            name='check_invested_amount_non_negative'
+        ), CheckConstraint(
+            'invested_amount <= full_amount',
+            name='check_invested_le_full'
+        ),
+        default=0
     )
     fully_invested: Mapped[bool] = mapped_column(
         Boolean, default=False

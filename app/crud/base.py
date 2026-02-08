@@ -1,12 +1,10 @@
-from typing import List, Optional, TypeVar, Type
+from typing import List, Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import asc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject, Donation
-
-T = TypeVar('T', CharityProject, Donation)
+from app.models import CharityProject
 
 
 class CRUDBase:
@@ -78,26 +76,25 @@ class BaseCharityRepository(CRUDBase):
     """Базовый класс для работы с благотворительными проектами."""
 
     def __init__(self, session: AsyncSession):
+        super().__init__(None)
         self.session = session
 
-    async def get_active_entities(self, entity_type: Type[T]) -> List[T]:
-        if entity_type == CharityProject:
-            query = (
-                select(CharityProject)
-                .where(
-                    CharityProject.close_date.is_(None),
-                    CharityProject.fully_invested.is_(False),
-                )
-                .order_by(asc(CharityProject.create_date))
+    async def get_active_entities(self) -> List:
+        if self.model is None:
+            raise ValueError(
+                "Модель не задана. Используйте метод set_model() или подкласс."
             )
-        elif entity_type == Donation:
-            query = (
-                select(Donation)
-                .where(Donation.fully_invested.is_(False))
-                .order_by(asc(Donation.create_date))
-            )
+        if self.model == CharityProject:
+            conditions = [
+                self.model.fully_invested.is_(False),
+                self.model.close_date.is_(None)
+            ]
         else:
-            raise ValueError('Неподдерживаемый тип объекта')
-
+            conditions = [self.model.fully_invested.is_(False)]
+        query = select(
+            self.model
+        ).where(*conditions).order_by(asc(self.model.create_date))
         result = await self.session.execute(query)
         return result.scalars().all()
+    def set_model(self, model):
+        self.model = model
