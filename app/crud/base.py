@@ -1,10 +1,12 @@
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import asc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CharityProject
+from app.models import CharityProject, Donation
+
+ModelType = TypeVar('ModelType', CharityProject, Donation)
 
 
 class CRUDBase:
@@ -71,31 +73,16 @@ class CRUDBase:
         await session.commit()
         return db_obj
 
-
-class BaseCharityRepository(CRUDBase):
-    """Базовый класс для работы с благотворительными проектами."""
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(None)
-        self.session = session
-
-    async def get_active_entities(self) -> List:
-        if self.model is None:
-            raise ValueError(
-                "Модель не задана. Используйте метод set_model() или подкласс."
-            )
+    async def get_active_objects(
+        self,
+        session: AsyncSession
+    ) -> List[ModelType]:
+        """Получение активных объектов (незавершенных)."""
+        conditions = [self.model.fully_invested.is_(False)]
         if self.model == CharityProject:
-            conditions = [
-                self.model.fully_invested.is_(False),
-                self.model.close_date.is_(None)
-            ]
-        else:
-            conditions = [self.model.fully_invested.is_(False)]
+            conditions.append(self.model.close_date.is_(None))
         query = select(
             self.model
         ).where(*conditions).order_by(asc(self.model.create_date))
-        result = await self.session.execute(query)
+        result = await session.execute(query)
         return result.scalars().all()
-
-    def set_model(self, model):
-        self.model = model

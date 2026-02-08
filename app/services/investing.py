@@ -1,46 +1,40 @@
 from datetime import datetime
-from typing import Union
+from typing import TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.base import BaseCharityRepository
-from app.models import CharityProject, Donation
+from app.crud.base import CRUDBase
+from app.models.base import BaseCharityDonationModel
+
+T = TypeVar('T', bound=BaseCharityDonationModel)
 
 
 async def distribute_funds(
-    source: Union[CharityProject, Donation],
+    source: T,
+    repository: CRUDBase,
     session: AsyncSession,
-) -> Union[CharityProject, Donation]:
+) -> T:
     """Распределяет средства от source к противоположному типу объектов."""
-    target_model = Donation if isinstance(
-        source,
-        CharityProject
-    ) else CharityProject
+    targets = await repository.get_active_objects(session)
 
-    repository = BaseCharityRepository(session)
-    repository.set_model(target_model)
-    targets = await repository.get_active_entities()
+    if targets:
+        available_amount = source.full_amount - source.invested_amount
 
-    if not targets:
-        return source
+        for target in targets:
+            if available_amount <= 0:
+                break
 
-    available_amount = source.full_amount - source.invested_amount
+            needed_amount = target.full_amount - target.invested_amount
+            to_transfer = min(needed_amount, available_amount)
 
-    for target in targets:
-        if available_amount <= 0:
-            break
-        needed_amount = target.full_amount - target.invested_amount
-        to_transfer = min(needed_amount, available_amount)
-
-        if to_transfer <= 0:
-            continue
-        target.invested_amount += to_transfer
-        if target.invested_amount >= target.full_amount:
-            target.fully_invested = True
-            target.close_date = datetime.now()
-
-        source.invested_amount += to_transfer
-        available_amount -= to_transfer
+            if to_transfer <= 0:
+                continue
+            target.invested_amount += to_transfer
+            if target.invested_amount >= target.full_amount:
+                target.fully_invested = True
+                target.close_date = datetime.now()
+            source.invested_amount += to_transfer
+            available_amount -= to_transfer
 
     if source.invested_amount >= source.full_amount:
         source.fully_invested = True
@@ -50,19 +44,3 @@ async def distribute_funds(
     await session.commit()
     await session.refresh(source)
     return source
-
-
-async def invest_donation(
-    donation: Donation,
-    session: AsyncSession,
-) -> Donation:
-    """Инвестирует пожертвование в активные проекты."""
-    return await distribute_funds(donation, session)
-
-
-async def invest_to_new_project(
-    project: CharityProject,
-    session: AsyncSession,
-) -> CharityProject:
-    """Инвестирует в новый проект из активных пожертвований."""
-    return await distribute_funds(project, session)
