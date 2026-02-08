@@ -96,5 +96,6 @@ class BaseCharityRepository(CRUDBase):
         ).where(*conditions).order_by(asc(self.model.create_date))
         result = await self.session.execute(query)
         return result.scalars().all()
+
     def set_model(self, model):
         self.model = model

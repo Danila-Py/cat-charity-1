@@ -12,12 +12,10 @@ async def distribute_funds(
     session: AsyncSession,
 ) -> Union[CharityProject, Donation]:
     """Распределяет средства от source к противоположному типу объектов."""
-    if isinstance(source, CharityProject):
-        target_model = Donation
-        source_is_project = True
-    else:
-        target_model = CharityProject
-        source_is_project = False
+    target_model = Donation if isinstance(
+        source,
+        CharityProject
+    ) else CharityProject
 
     repository = BaseCharityRepository(session)
     repository.set_model(target_model)
@@ -25,28 +23,29 @@ async def distribute_funds(
 
     if not targets:
         return source
-    available_from_source = source.full_amount - source.invested_amount
+
+    available_amount = source.full_amount - source.invested_amount
 
     for target in targets:
-        if available_from_source <= 0:
+        if available_amount <= 0:
             break
-
-        needed_by_target = target.full_amount - target.invested_amount
-        to_transfer = min(needed_by_target, available_from_source)
+        needed_amount = target.full_amount - target.invested_amount
+        to_transfer = min(needed_amount, available_amount)
 
         if to_transfer <= 0:
             continue
-
         target.invested_amount += to_transfer
         if target.invested_amount >= target.full_amount:
             target.fully_invested = True
             target.close_date = datetime.now()
+
         source.invested_amount += to_transfer
-        available_from_source -= to_transfer
+        available_amount -= to_transfer
 
     if source.invested_amount >= source.full_amount:
         source.fully_invested = True
         source.close_date = datetime.now()
+
     session.add(source)
     await session.commit()
     await session.refresh(source)
