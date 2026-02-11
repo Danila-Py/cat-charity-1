@@ -5,6 +5,7 @@ from sqlalchemy import asc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import CharityProject, Donation
+from app.models.base import BaseCharityDonationModel
 
 ModelType = TypeVar('ModelType', CharityProject, Donation)
 
@@ -73,16 +74,22 @@ class CRUDBase:
         await session.commit()
         return db_obj
 
+
+class BaseCharityRepository(CRUDBase):
+    """Базовый репозиторий для благотворительных моделей."""
+
     async def get_active_objects(
         self,
         session: AsyncSession
-    ) -> List[ModelType]:
-        """Получение активных объектов (незавершенных)."""
+    ) -> List[BaseCharityDonationModel]:
+        """
+        Получение активных объектов (не полностью инвестированных).
+        """
         conditions = [self.model.fully_invested.is_(False)]
-        if self.model == CharityProject:
-            conditions.append(self.model.close_date.is_(None))
-        query = select(
-            self.model
-        ).where(*conditions).order_by(asc(self.model.create_date))
+        
+        # Дочерние классы могут переопределить这个方法 при необходимости
+        query = select(self.model).where(
+            *conditions
+        ).order_by(asc(self.model.create_date))
         result = await session.execute(query)
         return result.scalars().all()

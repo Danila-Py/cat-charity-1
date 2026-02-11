@@ -3,7 +3,7 @@ from typing import TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.base import CRUDBase
+from app.crud.base import BaseCharityRepository
 from app.models.base import BaseCharityDonationModel
 
 T = TypeVar('T', bound=BaseCharityDonationModel)
@@ -11,7 +11,7 @@ T = TypeVar('T', bound=BaseCharityDonationModel)
 
 async def distribute_funds(
     source: T,
-    repository: CRUDBase,
+    repository: BaseCharityRepository,
     session: AsyncSession,
 ) -> T:
     """Распределяет средства от source к противоположному типу объектов."""

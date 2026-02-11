@@ -9,8 +9,7 @@ from app.api.validators import (check_charity_project_before_edit,
                                 check_name_duplicate)
 from app.core.db import get_async_session
 from app.crud import charity_project_crud
-from app.crud.base import CRUDBase
-from app.models import Donation
+from app.crud.donation import donation_crud
 from app.schemas.charity_project import (CharityProjectCreate,
                                          CharityProjectDB,
                                          CharityProjectUpdate)
@@ -35,8 +34,7 @@ async def create_new_charityproject(
     """Добавление благотворительного проекта."""
     await check_name_duplicate(charityproject.name, session)
     new_project = await charity_project_crud.create(charityproject, session)
-    donation_repository = CRUDBase(Donation)
-    return await distribute_funds(new_project, donation_repository, session)
+    return await distribute_funds(new_project, donation_crud, session)
 
 
 @router.get(
