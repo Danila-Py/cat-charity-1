@@ -82,12 +82,7 @@ class BaseCharityRepository(CRUDBase):
         self,
         session: AsyncSession
     ) -> List[BaseCharityDonationModel]:
-        """
-        Получение активных объектов (не полностью инвестированных).
-        """
         conditions = [self.model.fully_invested.is_(False)]
-        
-        # Дочерние классы могут переопределить这个方法 при необходимости
         query = select(self.model).where(
             *conditions
         ).order_by(asc(self.model.create_date))
